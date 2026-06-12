@@ -1,0 +1,23 @@
+{
+  "_comment": "Reference MCP configuration for the DataOps Knowledge Hub. Copy the relevant block into Claude Code's MCP settings (~/.claude/mcp.json or Settings → MCP) and replace `cwd` with your absolute project path.",
+  "mcpServers": {
+    "dataops-knowledge-hub-local": {
+      "command": "python",
+      "args": ["-m", "src.mcp.run"],
+      "cwd": "/absolute/path/to/ws-1-llama-index-rag",
+      "env": {
+        "API_BASE_URL": "http://localhost:8000",
+        "API_TIMEOUT_SECONDS": "60"
+      }
+    },
+    "dataops-knowledge-hub-prod": {
+      "command": "python",
+      "args": ["-m", "src.mcp.run"],
+      "cwd": "/absolute/path/to/ws-1-llama-index-rag",
+      "env": {
+        "API_BASE_URL": "https://your-app.railway.app",
+        "API_TIMEOUT_SECONDS": "60"
+      }
+    }
+  }
+}

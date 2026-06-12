@@ -1,0 +1,207 @@
+# nome de projeto fixo: garante que esta pasta gerencie os mesmos containers
+# (dataops-*) iniciados antes, independente do nome do diretório.
+name: ws-1-llama-index-rag
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dataops-postgres
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5442:5432"   # host 5442 p/ evitar conflito com rag-postgres (5432) do repo principal
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./infra/scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - dataops-network
+
+  mongo:
+    image: mongo:7
+    container_name: dataops-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep -q 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - dataops-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: dataops-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      # Qdrant's image has no wget/curl/python, so probe the listening port
+      # via bash /dev/tcp instead of an HTTP request.
+      test: ["CMD-SHELL", "timeout 2 bash -c '>/dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - dataops-network
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: dataops-neo4j
+    # NOTE: no `env_file: .env` — Neo4j treats every NEO4J_* env var as a
+    # config key, so vars like NEO4J_URI (meant for our app) would break it.
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - dataops-network
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: dataops-seaweedfs
+    command: server -s3 -dir=/data
+    ports:
+      - "8333:8333"
+      - "9333:9333"
+    volumes:
+      - seaweedfs_data:/data
+    healthcheck:
+      # SeaweedFS binds to IPv4 only; `localhost` resolves to ::1 in this
+      # image, so probe 127.0.0.1 explicitly. Status endpoint, not /cluster/status,
+      # because the latter is filer-only in newer images.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9333/cluster/status >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - dataops-network
+
+  init-seaweedfs:
+    image: amazon/aws-cli:latest
+    container_name: dataops-init-seaweedfs
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/scripts/init-seaweedfs.sh"]
+    environment:
+      SEAWEEDFS_ENDPOINT: http://seaweedfs:8333
+      SEAWEEDFS_MASTER: http://seaweedfs:9333
+      SEAWEEDFS_BUCKET: ${SEAWEEDFS_BUCKET}
+      AWS_ACCESS_KEY_ID: any
+      AWS_SECRET_ACCESS_KEY: any
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - ./infra/scripts:/scripts:ro
+      - ./infra/docs:/docs:ro
+    restart: "no"
+    networks:
+      - dataops-network
+
+  init-neo4j:
+    image: neo4j:5-community
+    container_name: dataops-init-neo4j
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/scripts/seed-neo4j.sh"]
+    env_file: .env
+    environment:
+      NEO4J_HOST: neo4j
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      CYPHER_FILE: /scripts/init-neo4j.cypher
+    volumes:
+      - ./infra/scripts:/scripts:ro
+    restart: "no"
+    networks:
+      - dataops-network
+
+  data-generator:
+    build:
+      context: ./generator
+      dockerfile: Dockerfile
+    container_name: dataops-data-generator
+    env_file: .env
+    environment:
+      # Override .env host values (localhost) with in-network service names.
+      GENERATOR_INTERVAL_SECONDS: "30"
+      POSTGRES_HOST: postgres
+      MONGO_HOST: mongo
+      SEAWEEDFS_HOST: seaweedfs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+    networks:
+      - dataops-network
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dataops-app
+    env_file: .env
+    environment:
+      # Override .env host values (localhost) with in-network service names.
+      POSTGRES_HOST: postgres
+      MONGO_HOST: mongo
+      QDRANT_HOST: qdrant
+      NEO4J_URI: bolt://neo4j:7687
+      SEAWEEDFS_HOST: seaweedfs
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    networks:
+      - dataops-network
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  mongo_data:
+  qdrant_data:
+  neo4j_data:
+  seaweedfs_data:
+
+networks:
+  dataops-network:
+    driver: bridge
+    name: dataops-network

@@ -1,0 +1,44 @@
+# ─── Segredos (NUNCA commitar) ───
+**/.env
+!**/.env.example
+
+# ─── Ambientes virtuais (pesados — a turma recria) ───
+**/.venv/
+**/venv/
+
+# ─── Python gerado ───
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/*.egg-info/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# ─── Artefatos do agente (gerados em runtime) ───
+**/guardian_checkpoints.db
+**/.langgraph_api/
+**/.chainlit/
+**/.files/
+**/chainlit.md
+
+# ─── Gabarito do instrutor (NÃO distribuir p/ a turma — agentic dev do zero) ───
+agent/
+
+# ─── Docs de instrutor (vivem em ../w02-instrutor/; salvaguarda se voltarem aqui) ───
+ROTEIRO-AULA.md
+GUIA-DE-ESTUDO.md
+PLANO-WORKSHOP.md
+EVIDENCIA-VISUAL.html
+
+# ─── Material didático do W01 (a turma só precisa do código, não dos PDFs/slides) ───
+w01-rag/docs/
+w01-rag/presentation/
+
+# ─── Docker / dados locais do W01 ───
+w01-rag/infra/data/
+
+# ─── SO / editor ───
+.DS_Store
+*.swp
+.idea/
+.vscode/
