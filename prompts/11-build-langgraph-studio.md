@@ -16,7 +16,7 @@ ser descoberto), um entrypoint `studio_graph`, e o script `scripts/studio.sh`.
 
 ## Requirements
 
-### `pyproject.toml` (na raiz do agente)
+### `pyproject.toml` (na raiz do projeto)
 - Pacote `quality-guardian`, `requires-python >=3.11`, layout `src/` (`package-dir = {"" = "src"}`,
   `packages.find where=["src"]`). Dependências reais ficam no `requirements.txt`; aqui só o mínimo p/
   o `langgraph-cli` descobrir o pacote `guardian`. Instalar com `pip install -e .`.
@@ -29,7 +29,7 @@ ser descoberto), um entrypoint `studio_graph`, e o script `scripts/studio.sh`.
   2. **Assinatura só com tipos `RunnableConfig`/`ServerRuntime`** — o `langgraph-cli` inspeciona a
      assinatura da factory e rejeita `*args/**kwargs`. Por isso o parâmetro tipado `config`.
 
-### `langgraph.json` (na raiz do agente)
+### `langgraph.json` (na raiz do projeto)
 ```json
 {
   "dependencies": ["."],

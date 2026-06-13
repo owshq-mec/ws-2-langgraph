@@ -14,7 +14,7 @@ O plano do projeto está em `sketch/plan.md`.
 
 ## Objective
 
-Criar um `CLAUDE.md` na raiz do agente — o contrato entre desenvolvedor e Claude Code para este projeto.
+Criar um `CLAUDE.md` na raiz do projeto — o contrato entre desenvolvedor e Claude Code para este projeto.
 
 ## Requirements
 

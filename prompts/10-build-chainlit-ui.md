@@ -11,7 +11,7 @@ Aprovar/Override** (o human-in-the-loop agora visual, não na CLI).
 
 ## Objective
 
-Criar `chainlit_app.py` na raiz do agente.
+Criar `chainlit_app.py` na raiz do projeto.
 
 ## Requirements
 
