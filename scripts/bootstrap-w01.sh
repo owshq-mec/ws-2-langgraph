@@ -224,10 +224,14 @@ cat <<EOF
     docker compose -f w01-rag/docker-compose.yml ps
     docker exec ${PG_CONTAINER} psql -U ${PG_USER} -d ${PG_DB} -c "SELECT quality_flag, count(*) FROM customers GROUP BY 1;"
 
-  ${BOLD}Próximo passo (o agente W02):${RST}
-    cd agent && python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
-    python -m src.guardian.run draw      # desenha a máquina de estados
-    python -m src.guardian.run run       # roda contra o Ledger vivo
+  ${BOLD}Próximo passo (preparar o scaffold do agente):${RST}
+    # na RAIZ do repo (onde estão prompts/, scripts/, src/) — NÃO em agent/
+    python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+    cp .env.example .env   # opcional: edite e ponha ANTHROPIC_API_KEY (com saldo) — ver SETUP-ALUNO.md
+    # o src/guardian/ começa VAZIO — você o constrói na aula colando os prompts/ no Claude Code.
+    # Só DEPOIS de construído (a partir do prompt 04) os comandos abaixo funcionam:
+    #   python -m src.guardian.run draw     # desenha a máquina de estados
+    #   python -m src.guardian.run run      # roda contra o Ledger vivo
 
   ${BOLD}Controle:${RST}
     bash scripts/bootstrap-w01.sh --down   # parar (mantém dados)
