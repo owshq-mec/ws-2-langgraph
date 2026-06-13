@@ -34,6 +34,17 @@ fi
 
 printf "${BOLD}▸ Restaurando %s customers corrompidos (red+yellow)…${RST}\n" "$n_marked"
 psql -v ON_ERROR_STOP=1 -q <<SQL
+-- Zera o veredito do agente (quality_flag/health_score/checked_at) ANTES de reescrever
+-- o email — senão o filtro por padrão de email não casaria mais. Sem isso, o customer
+-- volta a ter dados íntegros mas carrega uma flag 'red'/'yellow' presa do run anterior
+-- (flag órfã), e como o agente só re-pontua a janela recente, ids antigos ficariam
+-- marcados pra sempre. Devolve a linha ao estado PRÉ-agente (não-pontuado, flag nula).
+UPDATE customers
+   SET health_score = NULL,
+       quality_flag = NULL,
+       checked_at   = NULL
+ WHERE email LIKE '${EMAIL_PATTERN}' OR email LIKE '${YELLOW_PATTERN}';
+
 -- seed-red: devolve os pedidos falhos a 'completed'
 UPDATE orders o
    SET status = 'completed'
