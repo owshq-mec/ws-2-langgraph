@@ -25,6 +25,23 @@ services:
     networks:
       - dataops-network
 
+  # pgweb — janela visual do Ledger (W02). Conecta ao dataops-postgres pela rede
+  # interna (porta nativa 5432, não a 5442 do host) e expõe a UI em :8081. Serve para
+  # mostrar ao vivo as colunas health_score / quality_flag / checked_at que o Guardian
+  # grava em `customers`, e o quality_flag='red' que dispara a Crew do W03.
+  pgweb:
+    image: sosedoff/pgweb:latest
+    container_name: dataops-pgweb
+    environment:
+      PGWEB_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dataops-network
+
   mongo:
     image: mongo:7
     container_name: dataops-mongo

@@ -27,6 +27,14 @@ adicionar os nós `optimize`/`evaluate`/`recommend`, os 2 roteadores, e o ciclo.
 > determinística. O grafo NUNCA quebra ao vivo. LangChain 1.3: `from langchain.chat_models import
 > init_chat_model`. O LLM emite texto; quem decide o fluxo é o grafo. O LLM nunca executa nada.
 
+> **Setup da chave (p/ ver o LLM real, não o fallback):** preencha `ANTHROPIC_API_KEY` no `.env`
+> com uma chave **de uma conta com saldo** — a API da Anthropic é pré-paga, **não tem free tier**
+> (o plano grátis do claude.ai não dá acesso à API). Sem créditos, a chamada retorna `400 credit
+> balance too low`, o `try/except` engole e cai em `fonte="fallback"`. Atenção: `_has_key()` só
+> checa se a var existe — uma chave-placeholder ou sem saldo passa no gate mas falha na chamada.
+> Para confirmar que o LLM real respondeu, verifique `fonte="llm"` na saída. O `.env` só é lido
+> porque o `config.py` chama `load_dotenv()` (prompt 02) — sem isso, criar o `.env` não basta.
+
 - `_has_key()` → bool (checa `ANTHROPIC_API_KEY` no ambiente). `_model(spec)` cacheado
   (`init_chat_model(spec, temperature=0)`).
 - `recommend(dataset, health, flag, violations) -> (texto, fonte)`: diagnóstico curto em PT (Sonnet,

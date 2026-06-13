@@ -16,6 +16,7 @@ psycopg-binary==3.3.4
 psycopg-pool==3.3.1
 psycopg2-binary==2.9.12
 psycopg==3.3.4
+python-dotenv==1.2.2
 pytest>=8.0
 langgraph-cli[inmem]==0.4.29
 rich==15.0.0

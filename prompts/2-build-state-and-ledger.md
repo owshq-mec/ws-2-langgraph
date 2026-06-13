@@ -21,6 +21,11 @@ Criar `src/guardian/config.py`, `src/guardian/state.py` e `src/guardian/ledger.p
 ## Requirements
 
 ### `config.py`
+- **Carregar o `.env` no topo do módulo** (antes de qualquer `os.getenv`): `from dotenv import
+  load_dotenv; load_dotenv()`. Como `config` é importado por todos os entrypoints (CLI, Chainlit,
+  MCP, testes), a `ANTHROPIC_API_KEY` do `.env` entra no ambiente para todos eles. Import defensivo
+  (`try/except ModuleNotFoundError: pass`) p/ não quebrar se `python-dotenv` faltar. Pinar
+  `python-dotenv` no `requirements.txt`.
 - Conexões via env var com defaults do setup local:
   - Postgres do W01 no HOST: `GUARDIAN_PG_HOST=localhost`, `GUARDIAN_PG_PORT=5442`,
     db/user/password `dataops`/`dataops`/`dataops123`.
