@@ -29,6 +29,9 @@ W01_DIR="$(cd "${SCRIPT_DIR}/../w01-rag" && pwd)"
 DATA_SERVICES=(postgres mongo qdrant neo4j seaweedfs)
 INIT_SERVICES=(init-neo4j init-seaweedfs)
 GEN_SERVICE=(data-generator)
+# pgweb — janela visual do Ledger (UI web em :8081). Não é data store, é ferramenta
+# de inspeção; sobe junto pra demo do antes/depois das colunas quality_flag/health_score.
+TOOL_SERVICE=(pgweb)
 
 PG_CONTAINER="dataops-postgres"
 PG_USER="dataops"
@@ -118,14 +121,16 @@ if grep -Eq '^OPENAI_API_KEY=sk-' "${W01_DIR}/.env" 2>/dev/null; then HAS_OPENAI
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. subir o data plane (+ inits + generator)
 # ─────────────────────────────────────────────────────────────────────────────
-step "3/6 · Subindo o data plane (stores + inits + generator)"
-say "  ${DIM}stores:${RST} ${DATA_SERVICES[*]}"
+step "3/6 · Subindo o data plane (stores + inits + generator + pgweb)"
+say "  ${DIM}stores:${RST} ${DATA_SERVICES[*]}  ${DIM}+ tool:${RST} ${TOOL_SERVICE[*]}"
 (
   cd "$W01_DIR"
   docker compose up -d "${DATA_SERVICES[@]}"
   # os jobs de init rodam uma vez e saem (restart: no) — tolere falha idempotente
   docker compose up -d "${INIT_SERVICES[@]}" 2>/dev/null || true
   docker compose up -d --build "${GEN_SERVICE[@]}"
+  # pgweb (janela do Ledger em :8081) — depends_on postgres healthy resolve a ordem
+  docker compose up -d "${TOOL_SERVICE[@]}"
 )
 ok "Containers solicitados."
 
@@ -215,12 +220,14 @@ printf "${RST}"
 cat <<EOF
   ${BOLD}Portas (host):${RST}
     Postgres (Ledger) ......... localhost:${HOST_PG_PORT}   db=${PG_DB} user=${PG_USER}
+    pgweb (UI do Ledger) ...... localhost:8081   ← janela visual das colunas do Guardian
     Qdrant  (Memory) .......... localhost:6333
     Neo4j   (Brain) ........... localhost:7474  (browser) / 7687 (bolt)
     SeaweedFS (Lake) .......... localhost:8333 (s3) / 9333 (master)
     API /query (se --with-api). localhost:8000
 
   ${BOLD}Inspecionar ao vivo:${RST}
+    open http://localhost:8081   # pgweb — veja quality_flag/health_score aparecerem
     docker compose -f w01-rag/docker-compose.yml ps
     docker exec ${PG_CONTAINER} psql -U ${PG_USER} -d ${PG_DB} -c "SELECT quality_flag, count(*) FROM customers GROUP BY 1;"
 
