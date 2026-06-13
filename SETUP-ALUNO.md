@@ -32,7 +32,7 @@ docker ps | grep dataops          # 6 containers "dataops-*" (Up/healthy)
 > prepara o ambiente: o `src/guardian/` começa **vazio** — é o que você vai preencher.
 
 ```bash
-cd aluno
+# na raiz do repo clonado (onde estão prompts/, scripts/, src/)
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -44,15 +44,15 @@ Confirme que as dependências entraram:
 python -c "import langgraph, langchain, psycopg, rich; print('OK')"
 ```
 
-## Passo 3 — Abrir o Claude Code no scaffold
+## Passo 3 — Abrir o Claude Code
 
 ```bash
-# de dentro de aluno/
+# na raiz do repo clonado
 claude
 ```
 
 Na aula, o instrutor vai te guiar a colar os prompts de `prompts/` (na ordem: 1, 2, 3, …) no Claude
-Code. Cada prompt gera uma parte do agente. Você vai **ver o código nascer** e rodar.
+Code. Cada prompt gera uma parte do agente em `src/guardian/`. Você vai **ver o código nascer** e rodar.
 
 ## Pronto!
 
@@ -65,8 +65,9 @@ pronto. Na aula, é só seguir o instrutor colando os prompts.
 
 | Pasta/arquivo | O que é |
 |---|---|
-| `aluno/` | **Seu** ponto de partida: `src/guardian/` vazio + prompts + requirements. Você constrói aqui. |
-| `aluno/prompts/` | Os prompts que você cola no Claude Code (na ordem). |
+| `src/guardian/` | **Onde você constrói** o agente (começa vazio; os prompts preenchem). |
+| `prompts/` | Os 11 prompts que você cola no Claude Code (na ordem). |
+| `requirements.txt` · `pyproject.toml` | Dependências do agente. |
 | `scripts/` | `bootstrap-w01` (sobe o W01), `seed-red`/`seed-yellow`/`restore` (gatilhos de demo), `studio` (LangGraph Studio). |
 | `w01-rag/` | O W01 (o cérebro). Você não mexe aqui — só sobe com o bootstrap. |
 

@@ -21,14 +21,14 @@
 **/.files/
 **/chainlit.md
 
-# ─── Gabarito do instrutor (NÃO distribuir p/ a turma — agentic dev do zero) ───
+# ─── Material só do instrutor (vive em ../w02-instrutor/; salvaguarda se voltar aqui) ───
+# O gabarito (agent/) e os docs de instrutor NÃO devem estar nesta pasta — moram em w02-instrutor/.
 agent/
-
-# ─── Docs de instrutor (vivem em ../w02-instrutor/; salvaguarda se voltarem aqui) ───
 ROTEIRO-AULA.md
 GUIA-DE-ESTUDO.md
 PLANO-WORKSHOP.md
 EVIDENCIA-VISUAL.html
+SLIDES-NIVELAMENTO.html
 
 # ─── Material didático do W01 (a turma só precisa do código, não dos PDFs/slides) ───
 w01-rag/docs/

@@ -17,24 +17,24 @@ catálogo do W01 e grava health scores de volta no Ledger — o trigger da Crew 
 
 | Arquivo / pasta | O que é |
 |---|---|
-| **`SETUP-ALUNO.md`** | **Comece aqui.** O que fazer após clonar (subir o W01, preparar o scaffold). |
-| `aluno/` | **Seu ponto de partida** (`src/guardian/` vazio): onde você constrói o agente colando os prompts. |
-| `prompts/` | **Os 11 prompts** que você cola no Claude Code ao vivo (= `aluno/prompts/`). |
+| **`SETUP-ALUNO.md`** | **Comece aqui.** O que fazer após clonar (subir o W01, preparar o ambiente). |
+| `src/guardian/` | **Onde você constrói** o agente (começa vazio; os prompts preenchem). |
+| `prompts/` | **Os 11 prompts** que você cola no Claude Code ao vivo (na ordem). |
 | `scripts/` | `bootstrap-w01` (sobe o W01), `seed-red`/`seed-yellow`/`restore` (gatilhos), `studio` (LangGraph Studio). |
 | `w01-rag/` | O projeto W01 (dependência; sobe a infra que o agente consome). |
 | `sketch/plan.md` | Arquitetura técnica + sequência de build. |
 
 ## Quickstart
 
-> Veja `SETUP-ALUNO.md` para o passo a passo completo. Você constrói o agente do zero em `aluno/`
+> Veja `SETUP-ALUNO.md` para o passo a passo completo. Você constrói o agente do zero na raiz,
 > colando os prompts no Claude Code. Os comandos abaixo assumem o agente já construído.
 
 ```bash
 # 1. subir o W01 (a infra que o agente consome) — UM comando
 bash scripts/bootstrap-w01.sh                    # Postgres no host :5442, dado vivo
 
-# 2. preparar o ambiente
-cd aluno && python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+# 2. preparar o ambiente (na raiz)
+python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
 pip install -e .                                 # registra o pacote (p/ o Studio)
 
 # 3. desenhar + rodar (caminho green)
@@ -42,18 +42,18 @@ python -m src.guardian.run draw                  # a máquina de estados
 python -m src.guardian.run run --thread demo     # roda contra o Ledger do W01
 
 # 4. auto-correção (yellow → o loop converge pra green)
-cd .. && bash scripts/seed-yellow.sh 2 && cd aluno
+bash scripts/seed-yellow.sh 2
 python -m src.guardian.run run --thread yellow
-cd .. && bash scripts/restore.sh && cd aluno
+bash scripts/restore.sh
 
 # 5. human-in-the-loop (red → pausa → resume)
-cd .. && bash scripts/seed-red.sh 2 && cd aluno
+bash scripts/seed-red.sh 2
 python -m src.guardian.run run --thread red       # PAUSA no interrupt
 python -m src.guardian.run resume --thread red --decision approve
-cd .. && bash scripts/restore.sh && cd aluno
+bash scripts/restore.sh
 
 # 6. a 2ª lente (LangGraph Studio)
-cd .. && bash scripts/studio.sh
+bash scripts/studio.sh
 
 # testes (a qualquer momento)
 python -m pytest tests/ -q                        # 11/11 verde
